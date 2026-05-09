@@ -1,5 +1,13 @@
 add_rules("mode.debug", "mode.release")
 
+option("compile_commands")
+    set_default(true)
+    set_showmenu(true)
+    set_description("Generate compile_commands.json (for clangd / IDE)")
+option_end()
+
+set_policy("generator.compile_commands", has_config("compile_commands"))
+
 set_languages("c++20")
 
 target("coro")
