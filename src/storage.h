@@ -61,7 +61,6 @@ class StorageBase<void> {
 };
 
 
-// 保存 promise 对应的coroutine的返回值，异常
 template <typename T>
 class Storage : public StorageBase<T> {
  public:

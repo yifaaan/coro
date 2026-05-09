@@ -35,12 +35,7 @@ Handle FuncArg(Ret (T::*)(Handle) const&&);
 template <typename T>
 concept AwaitSuspendReturnType = std::is_void_v<T> || std::is_same_v<T, bool> ||
                                  is_specialization_of<T, std::coroutine_handle>;
-
-}  // namespace coro::detail
-
-namespace coro {
-
-/*
+                                 /*
 void await_suspend(std::coroutine_handle<>);
 std::coroutine_handle<> await_suspend(std::coroutine_handle<Promise>);
 */
@@ -57,18 +52,28 @@ concept Awaiter = requires(
   std::forward<T>(t).await_resume();
 };
 
+}  // namespace coro::detail
+
+namespace coro {
+
+
+
 // Awaiter T的 await_resume() 的返回类型必须是Value
 template <typename T, typename Value>
-concept AwaiterOf = Awaiter<T> && requires(T&& t) {
+concept AwaiterOf = detail::Awaiter<T> && requires(T&& t) {
   { std::forward<T>(t).await_resume() } -> std::same_as<Value>;
 };
 
 // 可以被 co_await
 template <typename T>
 concept Awaitable = requires(T&& t) {
-  { detail::GetAwaiter(std::forward<T>(t)) } -> Awaiter;
+  { detail::GetAwaiter(std::forward<T>(t)) } -> detail::Awaiter;
 };
 
+template <typename A>
+  requires Awaitable<A>
+using AwaitResultT =
+    decltype(detail::GetAwaiter(std::declval<A>()).await_resume());
 
 // T 可以被 co_await，并且 co_await T 的结果类型是 Value
 template <typename T, typename Value>

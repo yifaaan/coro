@@ -29,6 +29,6 @@ struct TaskPromiseStorage : TaskPromiseStorageBase<T> {
 template <>
 struct TaskPromiseStorage<void> : TaskPromiseStorageBase<void> {
   static void return_void() noexcept { TRACE(); }
-}
+};
 
 }  // namespace coro::detail
