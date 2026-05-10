@@ -17,4 +17,15 @@ namespace coro {
 template <typename T, template <typename...> typename Template>
 concept specialization_of = detail::is_specialization_of<T, Template>;
 
+
+template<typename T>
+struct remove_rvalue_reference {
+  using type = T;
+};
+
+template<typename T>
+struct remove_rvalue_reference<T&&> {
+  using type = T;
+};
+
 }  // namespace coro
