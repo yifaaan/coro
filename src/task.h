@@ -3,6 +3,8 @@
 #include <coroutine>
 
 #include "task_promise_storage.h"
+#include "concepts.h"
+#include "type_traits.h"
 
 namespace coro {
 
@@ -38,8 +40,30 @@ public:
     };
 
 private:
+    struct awaiter {
+        [[nodiscard]] constexpr auto await_ready() const noexcept { return handle.done(); }
+
+        [[nodiscard]] constexpr std::coroutine_handle<> await_suspend(
+            std::coroutine_handle<> h) const noexcept {
+            handle.promise().continuation = h;
+            return handle;
+        }
+
+        [[nodiscard]] constexpr decltype(auto) await_resume() const {
+            return handle.promise().get();
+        }
+        std::coroutine_handle<promise_type> handle;
+    };
+
+private:
     std::coroutine_handle<promise_type> handle_;
     explicit task(promise_type& promise)
         : handle_{std::coroutine_handle<promise_type>::from_promise(promise)} {}
 };
+
+template <awaitable A>
+task<remove_rvalue_reference_t<awaiter_result_t<A>>> make_task(A&& awaitable) {
+    co_return co_await std::forward<A>(awaitable);
+}
+
 }  // namespace coro

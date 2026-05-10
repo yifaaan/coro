@@ -53,6 +53,6 @@ concept awaitable = requires(T&& t) {
 template <typename T, typename V>
 concept awaitable_of = awaitable<T> and requires(T&& t) {
     { detail::get_awaiter(std::forward<T>(t)) } -> awaiter_of<V>;
-}
+};
 
 }  // namespace coro
