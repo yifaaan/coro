@@ -1,14 +1,14 @@
 #pragma once
 
-namespace coro {
+namespace coro::detail {
 
-struct Noncopyable {
-  Noncopyable() = default;
-  ~Noncopyable() = default;
-  Noncopyable(const Noncopyable&) = delete;
-  Noncopyable& operator=(const Noncopyable&) = delete;
-  Noncopyable(Noncopyable&&) = delete;
-  Noncopyable& operator=(Noncopyable&&) = delete;
+struct noncopyable {
+    noncopyable() = default;
+    noncopyable(const noncopyable&) = delete;
+    noncopyable(noncopyable&&) = delete;
+    noncopyable& operator=(const noncopyable&) = delete;
+    noncopyable& operator=(noncopyable&&) = delete;
+    ~noncopyable() = default;
 };
 
-}  // namespace coro
+}
