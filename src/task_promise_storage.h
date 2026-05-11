@@ -1,6 +1,7 @@
 #pragma once
 
 #include "storage.h"
+#include "log.h"
 
 namespace coro::detail {
 
@@ -14,6 +15,7 @@ template <typename T>
 struct task_promise_storage : task_promise_storage_base<T> {
     template <std::convertible_to<T> U>
     void return_value(U&& value) noexcept(noexcept(this->set_value(std::forward<U>(value)))) {
+        LOGF();
         this->set_value(std::forward<U>(value));
     }
 };

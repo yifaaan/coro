@@ -6,6 +6,7 @@
 #include "task_promise_storage.h"
 #include "type_traits.h"
 #include "concepts.h"
+#include "log.h"
 
 namespace coro {
 
@@ -15,7 +16,10 @@ public:
     using value_type = T;
 
     struct promise_type : private detail::noncopyable, detail::task_promise_storage<T> {
-        static auto initial_suspend() noexcept { return std::suspend_always{}; }
+        static auto initial_suspend() noexcept {
+            LOGF();
+            return std::suspend_always{};
+        }
 
         // 当前协程(task)已执行完毕，编译器最后会调用这个函数
         // auto final_awaiter = promise.final_suspend();
@@ -28,35 +32,58 @@ public:
         static auto final_suspend() noexcept {
             struct final_awaiter : std::suspend_always {
                 auto await_suspend(std::coroutine_handle<promise_type> this_corotine) noexcept {
+                    LOGF();
                     return this_corotine.promise().continuation;
                 }
             };
 
+            LOGF();
             return final_awaiter{};
         }
 
-        task get_return_object() noexcept { return task{*this}; }
+        task get_return_object() noexcept {
+            LOGF();
+            return task{*this};
+        }
         // 当前协程执行完后，将控制流转移到该协程(对称转移)
         std::coroutine_handle<> continuation = std::noop_coroutine();
     };
 
     void resume() {
+        LOGF();
         if (!handle_.done()) {
             handle_.resume();
         }
     }
 
+    auto operator co_await() const& noexcept { return awaiter{handle_}; }
+    auto operator co_await() && noexcept {
+        struct rvalue_awaiter : public awaiter {
+            [[nodiscard]] decltype(auto) await_resume() {
+                LOGF();
+                return std::move(this->handle.promise()).get();
+            }
+        };
+        LOGF();
+        return rvalue_awaiter{{handle_}};
+    }
+
 private:
     struct awaiter {
-        [[nodiscard]] constexpr auto await_ready() const noexcept { return handle.done(); }
+        [[nodiscard]] auto await_ready() const noexcept {
+            LOGF();
+            return handle.done();
+        }
 
-        [[nodiscard]] constexpr std::coroutine_handle<> await_suspend(
+        [[nodiscard]] std::coroutine_handle<> await_suspend(
             std::coroutine_handle<> h) const noexcept {
+            LOGF();
             handle.promise().continuation = h;
             return handle;
         }
 
-        [[nodiscard]] constexpr decltype(auto) await_resume() const {
+        [[nodiscard]] decltype(auto) await_resume() const {
+            LOGF();
             return handle.promise().get();
         }
         std::coroutine_handle<promise_type> handle;

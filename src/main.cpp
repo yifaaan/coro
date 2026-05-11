@@ -1,16 +1,28 @@
 #include <iostream>
 
+#include "synchronized_task.h"
 #include "task.h"
+#include "log.h"
+
+using coro::ScopedLogger;
+
+coro::task<int> g() {
+    LOGF();
+    co_return 32;
+}
 
 coro::task<int> f() {
-    std::cout << "1\n";
-    std::cout << "123\n";
+    LOG("f");
+    auto x = co_await g();
+    std::cout << "x = " << x << '\n';
     co_return 32;
 }
 
 int main() {
-    auto x = f();
-    std::cout  << "def\n";
+    // LOGF();
+    // auto x = f();
+
     // x.resume();
-    std::cout << "abc";
+    auto x = coro::sync_wait(f());
+    std::cout << x;
 }
