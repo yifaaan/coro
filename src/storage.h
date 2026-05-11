@@ -24,8 +24,8 @@ protected:
 
 public:
     template <std::convertible_to<T> U>
-    void set_value(U&& value) noexcept(std::is_nothrow_constructible_v < T,
-                                       decltype(std::forward<U>(value))) {
+    void set_value(U&& value) noexcept(
+        std::is_nothrow_constructible_v<T, decltype(std::forward<U>(value))>) {
         result.template emplace<T>(std::forward<U>(value));
     }
 

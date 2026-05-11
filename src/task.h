@@ -2,9 +2,10 @@
 
 #include <coroutine>
 
+#include "noncopyable.h"
 #include "task_promise_storage.h"
-#include "concepts.h"
 #include "type_traits.h"
+#include "concepts.h"
 
 namespace coro {
 
@@ -13,7 +14,7 @@ class [[nodiscard]] task {
 public:
     using value_type = T;
 
-    struct promise_type : private detail::noncopyable, detail::task_promise_storage {
+    struct promise_type : private detail::noncopyable, detail::task_promise_storage<T> {
         static auto initial_suspend() noexcept { return std::suspend_always{}; }
 
         // 当前协程(task)已执行完毕，编译器最后会调用这个函数
@@ -26,7 +27,7 @@ public:
         //      }
         static auto final_suspend() noexcept {
             struct final_awaiter : std::suspend_always {
-                auto await_suspend(std::coroutine_handle<promise_type> this_corotine) {
+                auto await_suspend(std::coroutine_handle<promise_type> this_corotine) noexcept {
                     return this_corotine.promise().continuation;
                 }
             };
@@ -36,8 +37,14 @@ public:
 
         task get_return_object() noexcept { return task{*this}; }
         // 当前协程执行完后，将控制流转移到该协程(对称转移)
-        std::coroutine_handle<> continuation = std::noop_coroutine{};
+        std::coroutine_handle<> continuation = std::noop_coroutine();
     };
+
+    void resume() {
+        if (!handle_.done()) {
+            handle_.resume();
+        }
+    }
 
 private:
     struct awaiter {

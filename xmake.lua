@@ -6,7 +6,9 @@ option("compile_commands")
     set_description("Generate compile_commands.json (for clangd / IDE)")
 option_end()
 
-set_policy("generator.compile_commands", has_config("compile_commands"))
+if has_config("compile_commands") then
+    add_rules("plugin.compile_commands.autoupdate", {outputdir = "."})
+end
 
 set_languages("c++20")
 
