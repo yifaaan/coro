@@ -1,4 +1,4 @@
-#pragma once
+#pragma  once
 
 #include <iostream>
 #include <source_location>
@@ -9,7 +9,7 @@ namespace coro {
 
 // Logs in and out of a scope
 struct ScopedLogger {
-    static int indent;
+    static inline int indent = 0;
     std::string name;
     ScopedLogger(std::string n)
         : name(std::move(n)) {
@@ -22,7 +22,6 @@ struct ScopedLogger {
     }
 };
 
-inline int ScopedLogger::indent = 0;
 
 // Creates a ScopedLogger for the current function
 #define LOGF() ScopedLogger logger##__LINE__(std::source_location::current().function_name())
