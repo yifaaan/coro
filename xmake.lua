@@ -14,7 +14,7 @@ set_languages("c++20")
 
 target("coro")
     set_kind("binary")
-    add_files("src/*.cpp")
+    add_files("src/main.cpp")
     add_cxflags("-fcoroutines", {tools = {"gcc", "gxx", "clang", "clangxx"}})
 
 --

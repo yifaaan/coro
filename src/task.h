@@ -17,7 +17,6 @@ public:
 
     struct promise_type : private detail::noncopyable, detail::task_promise_storage<T> {
         static auto initial_suspend() noexcept {
-            LOGF();
             return std::suspend_always{};
         }
 
@@ -32,17 +31,13 @@ public:
         static auto final_suspend() noexcept {
             struct final_awaiter : std::suspend_always {
                 auto await_suspend(std::coroutine_handle<promise_type> this_corotine) noexcept {
-                    LOGF();
                     return this_corotine.promise().continuation;
                 }
             };
-
-            LOGF();
             return final_awaiter{};
         }
 
         task get_return_object() noexcept {
-            LOGF();
             return task{*this};
         }
         // 当前协程执行完后，将控制流转移到该协程(对称转移)
@@ -50,7 +45,6 @@ public:
     };
 
     void resume() {
-        LOGF();
         if (!handle_.done()) {
             handle_.resume();
         }
@@ -60,30 +54,25 @@ public:
     auto operator co_await() && noexcept {
         struct rvalue_awaiter : public awaiter {
             [[nodiscard]] decltype(auto) await_resume() {
-                LOGF();
                 return std::move(this->handle.promise()).get();
             }
         };
-        LOGF();
         return rvalue_awaiter{{handle_}};
     }
 
 private:
     struct awaiter {
         [[nodiscard]] auto await_ready() const noexcept {
-            LOGF();
             return handle.done();
         }
 
         [[nodiscard]] std::coroutine_handle<> await_suspend(
             std::coroutine_handle<> h) const noexcept {
-            LOGF();
             handle.promise().continuation = h;
             return handle;
         }
 
         [[nodiscard]] decltype(auto) await_resume() const {
-            LOGF();
             return handle.promise().get();
         }
         std::coroutine_handle<promise_type> handle;

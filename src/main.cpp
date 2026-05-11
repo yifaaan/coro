@@ -1,28 +1,34 @@
-#include <iostream>
-
+#include "async.h"
 #include "synchronized_task.h"
 #include "task.h"
-#include "log.h"
 
-using coro::ScopedLogger;
+#include <chrono>
+#include <exception>
+#include <iostream>
+#include <stdexcept>
+#include <thread>
 
-coro::task<int> g() {
-    LOGF();
-    co_return 32;
+coro::task<int> test_async_value() {
+    auto value = co_await coro::async([] {
+        std::this_thread::sleep_for(std::chrono::milliseconds{100});
+        return 42;
+    });
+
+    std::cout << "async value = " << value << '\n';
+    co_return value;
 }
 
-coro::task<int> f() {
-    LOG("f");
-    auto x = co_await g();
-    std::cout << "x = " << x << '\n';
-    co_return 32;
+coro::task<void> run_async_examples() {
+    auto value = co_await test_async_value();
+    std::cout << "received value = " << value << '\n';
+    co_return;
 }
 
 int main() {
-    // LOGF();
-    // auto x = f();
-
-    // x.resume();
-    auto x = coro::sync_wait(f());
-    std::cout << x;
+    try {
+        coro::sync_wait(run_async_examples());
+        std::cout << "finish\n";
+    } catch (const std::exception& ex) {
+        std::cout << "unhandled exception: " << ex.what() << '\n';
+    }
 }
