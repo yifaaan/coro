@@ -11,10 +11,16 @@ if has_config("compile_commands") then
 end
 
 set_languages("c++20")
+add_includedirs("src")
 
 target("coro")
     set_kind("binary")
     add_files("src/main.cpp")
+    add_cxflags("-fcoroutines", {tools = {"gcc", "gxx", "clang", "clangxx"}})
+
+target("run_async")
+    set_kind("binary")
+    add_files("example/run_async.cpp")
     add_cxflags("-fcoroutines", {tools = {"gcc", "gxx", "clang", "clangxx"}})
 
 --

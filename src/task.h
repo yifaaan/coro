@@ -1,6 +1,7 @@
 #pragma once
 
 #include <coroutine>
+#include <utility>
 
 #include "noncopyable.h"
 #include "task_promise_storage.h"
@@ -25,6 +26,22 @@ namespace coro {
 template <typename T = void, typename Allocator = void>
 class [[nodiscard]] task {
 public:
+    task(const task&) = delete;
+    task& operator=(const task&) = delete;
+
+    task(task&& other) noexcept
+        : handle_{std::exchange(other.handle_, {})} {}
+
+    task& operator=(task&& other) noexcept {
+        if (this != &other) {
+            if (handle_) {
+                handle_.destroy();
+            }
+            handle_ = std::exchange(other.handle_, {});
+        }
+        return *this;
+    }
+
     ~task() {
         if (handle_) {
             handle_.destroy();
@@ -62,7 +79,7 @@ public:
     };
 
     void resume() {
-        if (!handle_.done()) {
+        if (handle_ && !handle_.done()) {
             handle_();
         }
     }
@@ -74,7 +91,7 @@ public:
                 return std::move(this->handle.promise()).get();
             }
         };
-        return rvalue_awaiter{{handle_}};
+        return rvalue_awaiter{{std::exchange(handle_, {})}};
     }
 
 private:
