@@ -14,6 +14,12 @@ template <typename Sync, typename T>
     requires requires(Sync&& sync) { sync.notify_awaitable_completed(); }
 class synchronized_task {
 public:
+    ~synchronized_task() {
+        if (handle_) {
+            handle_.destroy();
+        }
+    }
+    
     struct promise_type : detail::task_promise_storage<T> {
         static auto initial_suspend() noexcept { return std::suspend_always{}; }
 
@@ -55,11 +61,12 @@ synchronized_task<Sync, remove_rvalue_reference_t<awaiter_result_t<A>>> make_syn
     co_return co_await std::forward<A>(awaitable);
 }
 
+// 阻塞等待直到awaitable执行完毕
 template <awaitable A>
 decltype(auto) sync_wait(A&& awaitable) {
     struct sync {
         void notify_awaitable_completed() { latch.count_down(); }
-        std::latch latch;
+        std::latch latch; // 类似 go:: sync.WaitGroup
     };
     auto done = sync{std::latch{1}};
     auto sync_task = make_synchronized_task<sync, A>(std::forward<A>(awaitable));
